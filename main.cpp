@@ -123,7 +123,7 @@ class HoiKhanGia:public TroGiup {
         }
         cout<<"Khán giả:\n";
         for(int i=0;i<ch->soLuaChon();i++) {
-            if(!ch->daBiAn(i+1)) cout<<"Đáp án"<<i+1<<": "<<tl[i]<<"%\n";
+            if(!ch->daBiAn(i+1)) cout<<"Đáp án "<<i+1<<": "<<tl[i]<<"%\n";
         }
         return true;
     }
@@ -218,7 +218,11 @@ class TroChoi {
                 for(int k=0;k<4;k++)
                     if(tg[k]->conDung()) cout<<k+5<<"."<<tg[k]->layTen()<<"  ";
                 cout<<"\nChọn đáp án (0 = Dừng chơi): ";
-                cin>>chon;
+                if(!(cin>>chon)) {
+                    cin.clear();
+                    cin.ignore(1000,'\n');
+                    chon=-1;
+                }
                 if(chon>=5 && chon<=8) {
                     if(tg[chon-5]->conDung()) tg[chon-5]->dung(ch);
                     else cout<<"Đã sử dụng quyền trợ giúp này!"<<endl;
@@ -295,7 +299,11 @@ int main() {
     do {
         cout<<"\n===== AI LÀ TRIỆU PHÚ =====\n";
         cout<<"1. Chơi game\n2. Thêm câu hỏi\n3. Thống kê\n0. Thoát\nChọn: ";
-        cin>>chon;
+        if(!(cin>>chon)) {
+            cin.clear();
+            cin.ignore(1000,'\n');
+            chon=-1;  
+        }
         if(chon==1) game.choi();
         else if(chon==2) game.themCauHoi();
         else if(chon==3) game.thongKe();
