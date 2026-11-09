@@ -7,6 +7,8 @@
 using namespace std;
 const int SO_CAU=15;
 const long THUONG[SO_CAU]={200, 400, 600, 1000, 2000, 3000, 6000, 10000,14000, 22000, 30000, 40000, 60000, 85000, 150000};
+const int SO_MOI_MUC=5;
+const string TEN_MUC[4]={"","Dễ","Trung bình","Khó"};
 template <class T>
 class DanhSach {
     vector<T> ds;
@@ -19,9 +21,10 @@ class CauHoi {
     protected:
     string noiDung;
     int dapAn;
+    int muc;
     bool an[4];
     public:
-    CauHoi(string nd, int da) {noiDung=nd;dapAn=da;datLai();}
+    CauHoi(string nd, int da,int m) {noiDung=nd;dapAn=da;datLai();muc=m;}
     virtual ~CauHoi() {}
     virtual void hienThi()=0;
     virtual int soLuaChon()=0;
@@ -30,11 +33,12 @@ class CauHoi {
     int layDapAn() {return dapAn;}
     bool daBiAn(int c) {return c>=1 && c<=4 && an[c-1];}
     void datLai() {for(int i=0;i<4;i++) an[i]=false;}
+    int layMuc() {return muc;}
 };
 class CauHoiABCD:public CauHoi {
     string pa[4];
     public:
-    CauHoiABCD(string nd, string a, string b, string c, string d, int da):CauHoi(nd,da) {
+    CauHoiABCD(string nd, string a, string b, string c, string d, int da, int m):CauHoi(nd,da,m) {
         pa[0]=a;pa[1]=b;pa[2]=c;pa[3]=d;
     }
     void hienThi() {
@@ -57,7 +61,7 @@ class CauHoiABCD:public CauHoi {
 };
 class CauHoiDungSai:public CauHoi {
     public:
-    CauHoiDungSai(string nd, int da):CauHoi(nd,da) {}
+    CauHoiDungSai(string nd, int da,int m):CauHoi(nd,da,m) {}
     void hienThi() {
         cout<<noiDung<<endl;
         cout<<"  1.Đúng\n  2.Sai\n";
@@ -176,13 +180,15 @@ class TroChoi {
         while(getline(f,dong)) {
             if(dong=="") continue;
             int loai=atoi(dong.c_str());
+            getline(f,s);
+            int muc=atoi(dong.c_str());
             getline(f,nd);
             if(loai==1) {
                 getline(f,a);getline(f,b);getline(f,c);getline(f,d);getline(f,s);
-                dsCau.them(new CauHoiABCD(nd,a,b,c,d,atoi(s.c_str())));
+                dsCau.them(new CauHoiABCD(nd,a,b,c,d,atoi(s.c_str()),muc));
             } else {
                 getline(f,s);
-                dsCau.them(new CauHoiDungSai(nd,atoi(s.c_str())));
+                dsCau.them(new CauHoiDungSai(nd,atoi(s.c_str()),muc));
             }
         }
     }
@@ -192,14 +198,20 @@ class TroChoi {
             cout<<"Chưa có câu hỏi"<<endl;
             return;
         }
-        int soCau=(n<SO_CAU)?n:SO_CAU;
-        //random câu hỏi
+        //random câu hỏi 
         DanhSach<int> idx;
-        for(int i=0;i<n;i++) idx.them(i);
-        for(int i=0;i<soCau;i++) {
-            int j=i+rand()%(n-i);
-            int temp=idx[i];idx[i]=idx[j];idx[j]=temp;
+        for(int muc=1;muc<=3;muc++) {
+            DanhSach<int> ds;
+            for(int i=0;i<n;i++) if(dsCau[i]->layMuc()==muc) ds.them(i);
+            int m=ds.SoLuong();
+            int lay=(m<SO_MOI_MUC)?m:SO_MOI_MUC;
+            for(int i=0;i<lay;i++) {
+                int j=i+rand()%(m-i);
+                int temp=ds[i];ds[i]=ds[j];ds[j]=temp;
+                idx.them(ds[i]);
+            }
         }
+        int soCau=idx.SoLuong();
         string ten;
         cin.ignore();
         cout<<"Nhập tên người chơi: ";
@@ -250,10 +262,14 @@ class TroChoi {
         lichSu.them(nc);
     }
     void themCauHoi() {
-        int loai,da;
+        int loai,da,muc;
         string nd,a,b,c,d;
         cout<<"Loại câu hỏi(1. 4 đáp án,2. Đúng sai): ";
         cin>>loai;
+        do {
+            cout<<"Mức độ(1. Dễ, 2. Trung bình, 3. Khó): ";
+            cin>>muc;
+        } while(muc<1||muc>3);
         cin.ignore();
         cout<<"Nội dung câu hỏi: ";
         getline(cin,nd);
@@ -265,12 +281,12 @@ class TroChoi {
             cout<< "Đáp án 3: ";getline(cin, c);
             cout<< "Đáp án 4: ";getline(cin, d);
             cout<< "Đáp án đúng (1-4): ";cin>>da;
-            dsCau.them(new CauHoiABCD(nd,a,b,c,d,da));
-            f<<1<<endl<<nd<<endl<<a<<endl<<b<<endl<<c<<endl<<d<<endl<<da<<endl;
+            dsCau.them(new CauHoiABCD(nd,a,b,c,d,da,muc));
+            f<<1<<endl<<muc<<endl<<nd<<endl<<a<<endl<<b<<endl<<c<<endl<<d<<endl<<da<<endl;
         } else {
             cout<<"Đáp án đúng(1.Đúng, 2.Sai): ";cin>>da;
-            dsCau.them(new CauHoiDungSai(nd,da));
-            f<<2<<endl<<nd<<endl<<da<<endl;
+            dsCau.them(new CauHoiDungSai(nd,da,muc));
+            f<<2<<endl<<muc<<endl<<nd<<endl<<da<<endl;
         }
         cout<<"Đã thêm câu hỏi"<<endl;
     }
